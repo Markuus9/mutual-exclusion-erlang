@@ -1,10 +1,9 @@
 -module(gui).
--export([start/1]).
+-export([start/1, init/1]).
 -include_lib("wx/include/wx.hrl").
 
 start(Name) ->
-    spawn(fun() -> init(Name) end).
-
+    spawn(gui, init, [Name]).
 init(Name) ->
     Width = 200,
     Height = 200,
@@ -12,7 +11,6 @@ init(Name) ->
     Frame = wxFrame:new(Server, -1, Name, [{size,{Width, Height}}]),
     wxFrame:show(Frame),
     loop(Frame).
-    
 loop(Frame)->
     receive
         waiting ->

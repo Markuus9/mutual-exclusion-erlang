@@ -1,25 +1,23 @@
 -module(muty).
 -export([start/3, stop/0]).
 
-% We use the name of the module (i.e. lock3) as a parameter to the start procedure. We also provide the average time (in milliseconds) the worker is going to sleep before trying to get the lock (Sleep) and work with the lock taken (Work).
-
 start(Lock, Sleep, Work) ->
-    register(l1, apply(Lock, start, [1])),
-    register(l2, apply(Lock, start, [2])),
-    register(l3, apply(Lock, start, [3])),
-    register(l4, apply(Lock, start, [4])),
-    l1 ! {peers, [l2, l3, l4]},
-    l2 ! {peers, [l1, l3, l4]},
-    l3 ! {peers, [l1, l2, l4]},
-    l4 ! {peers, [l1, l2, l3]},
-    register(w1, worker:start("John", l1, Sleep, Work)),
-    register(w2, worker:start("Ringo", l2, Sleep, Work)),    
-    register(w3, worker:start("Paul", l3, Sleep, Work)),
-    register(w4, worker:start("George", l4, Sleep, Work)),
+    register(l1, spawn(Lock, init,[1, [l2,l3,l4]])),
+    register(l2, spawn(Lock, init,[2, [l1,l3,l4]])),
+    register(l3, spawn(Lock, init,[3, [l1,l2,l4]])),
+    register(l4, spawn(Lock, init,[4, [l1,l2,l3]])),
+    register(ringo, spawn(worker, init, ["Ringo", l1,10,Sleep,Work])),
+    register(john, spawn(worker, init, ["John", l2,11,Sleep,Work])),
+    register(george, spawn(worker, init, ["George", l3,12,Sleep,Work])),
+    register(paul, spawn(worker, init, ["Paul",l4,13,Sleep,Work])),
     ok.
 
 stop() ->
-    w1 ! stop,
-    w2 ! stop,
-    w3 ! stop,
-    w4 ! stop.
+    ringo ! stop,
+    john ! stop,
+    george ! stop,
+    paul ! stop,
+    l1 ! stop,
+    l2 ! stop,
+    l3 ! stop,
+    l4 ! stop.
